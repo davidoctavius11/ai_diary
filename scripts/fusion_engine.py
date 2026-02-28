@@ -27,8 +27,9 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).parent.parent
 FUSION_DIR = BASE_DIR / "data" / "fusion"
-PHOTOS_FILE = FUSION_DIR / "photos_analyzed.json"
-DIARY_FILE = FUSION_DIR / "diary_parsed.json"
+PHOTOS_FILE  = FUSION_DIR / "photos_analyzed.json"
+DIARY_FILE   = FUSION_DIR / "diary_parsed.json"
+FUSED_FILE   = FUSION_DIR / "fused_memories.json"
 MEMORIES_FILE = FUSION_DIR / "memories.json"
 EMBEDDINGS_FILE = FUSION_DIR / "embeddings.npy"
 EMBEDDINGS_INDEX = FUSION_DIR / "embeddings_index.json"  # {memory_id: row_in_npy}
@@ -89,9 +90,10 @@ def save_embeddings(memories: list[dict], matrix: np.ndarray):
 def main():
     print("Loading source data...")
     photos = load_json(PHOTOS_FILE)
-    diary = load_json(DIARY_FILE)
+    diary  = load_json(DIARY_FILE)
+    fused  = load_json(FUSED_FILE) if FUSED_FILE.exists() else []
 
-    all_entries = photos + diary
+    all_entries = photos + diary + fused
 
     if not all_entries:
         print("\nNo data to index. Run photo_analyzer.py and/or diary_parser.py first.")
@@ -99,6 +101,8 @@ def main():
 
     print(f"  {len(photos)} photo descriptions")
     print(f"  {len(diary)} diary entries")
+    if fused:
+        print(f"  {len(fused)} fused memories (diary+photo)")
 
     all_entries.sort(key=lambda e: e.get("date", "") or "")
 
@@ -109,7 +113,8 @@ def main():
     dates = [e["date"] for e in all_entries if e.get("date") and e["date"] not in ("unknown", "unknown date")]
     date_range = f"{min(dates)} → {max(dates)}" if dates else "unknown date range"
 
-    print(f"\nMemory store: {len(all_entries)} memories ({len(photos)} photos + {len(diary)} diary)")
+    fused_note = f" + {len(fused)} fused" if fused else ""
+    print(f"\nMemory store: {len(all_entries)} memories ({len(photos)} photos + {len(diary)} diary{fused_note})")
     print(f"Date range: {date_range}")
 
     # Semantic embeddings
