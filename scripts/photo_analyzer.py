@@ -100,19 +100,25 @@ def build_context_block(filename: str, photo_metadata: dict, family_map: dict) -
     meta = photo_metadata.get(filename, {})
     lines = []
 
-    location = meta.get("location")
-    if location:
+    # Rich location: POI + full hierarchy + season
+    loc_detail = meta.get("location_detail") or {}
+    location   = meta.get("location")
+    season     = meta.get("season")
+
+    if loc_detail.get("poi"):
+        lines.append(f"拍摄地点：{loc_detail['poi']}（{location}）")
+    elif location:
         lines.append(f"拍摄地点：{location}")
+
+    if season and location:
+        lines.append(f"拍摄季节：{season}")
 
     persons = meta.get("persons", [])
     if persons:
         labeled = []
         for name in persons:
             role = family_map.get(name)
-            if role:
-                labeled.append(f"{name}（{role}）")
-            else:
-                labeled.append(name)
+            labeled.append(f"{name}（{role}）" if role else name)
         lines.append(f"照片中识别的人物：{'、'.join(labeled)}")
         lines.append("请在描述中使用以上人物的身份称谓（如妈妈、爸爸、大儿子Brian等），而非泛指'小孩''女性'等。")
 
