@@ -118,9 +118,11 @@ def build_context_block(filename: str, photo_metadata: dict, family_map: dict) -
         labeled = []
         for name in persons:
             role = family_map.get(name)
-            labeled.append(f"{name}（{role}）" if role else name)
-        lines.append(f"照片中识别的人物：{'、'.join(labeled)}")
-        lines.append("请在描述中使用以上人物的身份称谓（如妈妈、爸爸、大儿子Brian等），而非泛指'小孩''女性'等。")
+            # Use role only when available — iPhoto names are internal keys
+            # and garbled names (e.g. "白是白翔的翔") confuse the vision model
+            labeled.append(role if role else name)
+        lines.append(f"照片中的人物（已由人脸识别确认，必须使用这些称谓）：{'、'.join(labeled)}")
+        lines.append("【强制要求】描述中每提到一个人，必须使用上面列出的称谓，绝对不能用'小孩'、'女性'、'男性'、'一个人'等泛指词。")
 
     if not lines:
         return ""
