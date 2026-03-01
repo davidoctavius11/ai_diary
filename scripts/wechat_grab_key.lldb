@@ -1,0 +1,22 @@
+# wechat_grab_key.lldb
+# --------------------
+# Attach to running WeChat, break on sqlite3_key, print the 32-byte key.
+# Usage (after re-signing WeChat):
+#   sudo lldb -p $(pgrep WeChat | head -1) -s scripts/wechat_grab_key.lldb
+
+# Import the Python callback module
+command script import scripts/wechat_key_printer.py
+
+# Bypass PT_DENY_ATTACH anti-debugging: intercept ptrace and return 0 immediately
+breakpoint set --name ptrace
+breakpoint command add 1 -o "thread return 0"
+
+# Set breakpoints on both sqlite3_key variants
+breakpoint set --name sqlite3_key
+breakpoint command add 2 --script-type python --python-function wechat_key_printer.handle_breakpoint
+
+breakpoint set --name sqlite3_key_v2
+breakpoint command add 3 --script-type python --python-function wechat_key_printer.handle_breakpoint
+
+# Continue execution (WeChat resumes; breakpoint fires on first db open)
+continue

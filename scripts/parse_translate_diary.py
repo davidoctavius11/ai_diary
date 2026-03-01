@@ -171,6 +171,7 @@ CONTEXT (read carefully):
 - "I" = the father/dad (narrator and writer)
 - "you" = Brian, his son, age 5–6 in 2025
 - 又白 or 弟弟 = Brian's younger brother
+- 曾一诺 or 一诺 = Brian's elder sister
 - 姥姥 = Brian's maternal grandma  |  姥爷 = maternal grandpa
 - 爽宁/妈妈 = Brian's mom  |  爷爷/奶奶 = paternal grandparents
 - Tone: warm, reflective, loving, sometimes philosophical

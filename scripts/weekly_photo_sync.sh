@@ -53,6 +53,9 @@ run_step "Extract face + location metadata" \
 run_step "Analyze new photos with GLM vision" \
     scripts/photo_analyzer.py
 
+run_step "Cross-fuse diary + photos into rich narratives" \
+    scripts/cross_fuse.py
+
 run_step "Rebuild memory index" \
     scripts/fusion_engine.py
 
