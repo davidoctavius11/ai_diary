@@ -19,16 +19,16 @@ Frida key capture (CCKeyDerivationPBKDF hook)
     │  produces: one 64-char hex key per database
     │
     ▼  [Step 2 — one-time per WeChat version]
-scripts/decrypt_wechat_db.py
+scripts/wechat/decrypt_wechat_db.py
     │  produces: data/wechat/decrypted/message_N_plain.db (plain SQLite)
     │
     ▼  [Step 3 — run once, re-run after syncing new messages]
-scripts/export_wechat_raw.py
+scripts/wechat/export_wechat_raw.py
     │  produces: data/wechat/all_messages.json  ← PERMANENT ARCHIVE
     │            (all text messages, no filtering)
     │
     ▼  [Step 4 — run any time, cheap, no DB access]
-scripts/parse_wechat.py
+scripts/wechat/parse_wechat.py
     │  reads:    data/wechat/all_messages.json
     │  produces: data/fusion/wechat_parsed.json
     │            (filtered + summarised via DeepSeek)
@@ -93,7 +93,7 @@ sudo xattr -rd com.apple.quarantine /Applications/WeChat.app
 
 **Terminal 1** — start the attach script (leave it waiting):
 ```bash
-bash scripts/attach_wechat.sh
+bash scripts/wechat/attach_wechat.sh
 ```
 
 **Then** open WeChat from the Dock.
@@ -104,7 +104,7 @@ and re-open all database files, triggering the PBKDF2 key derivation.
 
 Alternatively:
 ```bash
-bash scripts/run_frida.sh
+bash scripts/wechat/run_frida.sh
 ```
 (runs `frida_wechat_key.js` against the running WeChat process)
 
@@ -137,14 +137,14 @@ Record all unique 64-char hex keys — you need one per message DB.
 
 ```bash
 source venv/bin/activate
-python scripts/decrypt_wechat_db.py
+python scripts/wechat/decrypt_wechat_db.py
 ```
 
 This tries the key from `/tmp/wechat_key.txt` against all
 `message_*.db` files. If using a different key per DB, pass `--key`:
 
 ```bash
-python scripts/decrypt_wechat_db.py --key <64-char-hex>
+python scripts/wechat/decrypt_wechat_db.py --key <64-char-hex>
 ```
 
 Or use the bulk try-all-keys approach (more robust):
@@ -174,7 +174,7 @@ Run once after decryption. Exports **all text messages** to a flat JSON
 file with no filtering.
 
 ```bash
-python scripts/export_wechat_raw.py
+python scripts/wechat/export_wechat_raw.py
 ```
 
 Output: `data/wechat/all_messages.json`
@@ -194,7 +194,7 @@ Each record:
 To refresh after syncing new messages from phone (repeat Steps 1–2 for
 new data, then):
 ```bash
-python scripts/export_wechat_raw.py --force
+python scripts/wechat/export_wechat_raw.py --force
 ```
 
 ---
@@ -202,12 +202,12 @@ python scripts/export_wechat_raw.py --force
 ## Step 4 — Parse & Filter for a Person
 
 ```bash
-python scripts/parse_wechat.py              # all history
-python scripts/parse_wechat.py --days 90   # last 90 days only
+python scripts/wechat/parse_wechat.py              # all history
+python scripts/wechat/parse_wechat.py --days 90   # last 90 days only
 ```
 
 **To extract memories for a different family member**, edit the top of
-`scripts/parse_wechat.py`:
+`scripts/wechat/parse_wechat.py`:
 
 ```python
 # Primary subject: days must mention at least one of these
@@ -221,7 +221,7 @@ Also update `SUMMARISE_PROMPT` to name the new subject.
 Then delete the old output and re-run:
 ```bash
 rm data/fusion/wechat_parsed.json
-python scripts/parse_wechat.py
+python scripts/wechat/parse_wechat.py
 ```
 
 **No database access needed** — reads only from `all_messages.json`.
@@ -265,13 +265,13 @@ and rebuilds the TF-IDF embeddings.
 
 | File | Description |
 |------|-------------|
-| `scripts/attach_wechat.sh`    | Waits for WeChat to launch, auto-attaches Frida |
-| `scripts/run_frida.sh`        | Attaches Frida to running WeChat |
-| `scripts/frida_wechat_key.js` | Frida script: hooks CCKeyDerivationPBKDF, prints keys |
-| `scripts/wechat_grab_key.lldb`| LLDB alternative (kept for reference; Frida approach preferred) |
-| `scripts/decrypt_wechat_db.py`| Decrypts WCDB databases using captured keys |
-| `scripts/export_wechat_raw.py`| Exports all messages to all_messages.json |
-| `scripts/parse_wechat.py`     | Filters + summarises for a specific person |
+| `scripts/wechat/attach_wechat.sh`    | Waits for WeChat to launch, auto-attaches Frida |
+| `scripts/wechat/run_frida.sh`        | Attaches Frida to running WeChat |
+| `scripts/wechat/frida_wechat_key.js` | Frida script: hooks CCKeyDerivationPBKDF, prints keys |
+| `scripts/wechat/wechat_grab_key.lldb`| LLDB alternative (kept for reference; Frida approach preferred) |
+| `scripts/wechat/decrypt_wechat_db.py`| Decrypts WCDB databases using captured keys |
+| `scripts/wechat/export_wechat_raw.py`| Exports all messages to all_messages.json |
+| `scripts/wechat/parse_wechat.py`     | Filters + summarises for a specific person |
 | `data/wechat/decrypted/`      | Plain SQLite databases (keep these) |
 | `data/wechat/all_messages.json` | Full raw message archive (keep this) |
 | `data/fusion/wechat_parsed.json` | Filtered summaries for chatbot |

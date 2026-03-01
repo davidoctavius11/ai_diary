@@ -5,7 +5,7 @@
 #   sudo lldb -p $(pgrep WeChat | head -1) -s scripts/wechat_grab_key.lldb
 
 # Import the Python callback module
-command script import scripts/wechat_key_printer.py
+command script import scripts/wechat/wechat_key_printer.py
 
 # Bypass PT_DENY_ATTACH anti-debugging: intercept ptrace and return 0 immediately
 breakpoint set --name ptrace
